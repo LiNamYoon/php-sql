@@ -1,0 +1,83 @@
+<?php
+header("Content-Encoding: utf-8");
+	include("Config.php");  //DB연결을 위한 정보가 있음
+	include ("ConnectSlave.php");
+
+	$id = $_POST['id'];	//유니티로 부터 받은 id
+	$deviceID = $_POST['deviceID']; 
+	
+	
+	if($deviceID != "")
+	{		
+		//계정 블럭된 애는 로그인 불가 처리
+		$blockCheck = mysqli_query($conn, "select userID from BlackList where deviceID = '$deviceID'");
+		$count = mysqli_num_rows($blockCheck);
+		if($count > 0)
+		{
+			// 여기서 시작
+			// 블록 걸린 시간 체크
+			$blockTime = mysqli_query($conn, "select timeStamp from BlackList where deviceID = '$deviceID'");
+			$result = mysqli_fetch_array($blockTime, MYSQLI_ASSOC);
+			$blockTime = $result['timeStamp'];
+			$blockTime = strtotime($blockTime); // 해당 시간 초로 변경
+			
+			// 현재 시간 초로 바꿈
+			$nowTime = mktime();//DATE("Y-m-d H:i:s",time());
+			
+			// 일주일 지남 체크
+			if($nowTime-604800 >= $blockTime)
+			{
+				mysqli_query($conn,"delete from BlackList where deviceID = '$deviceID'");
+				echo "BLACK_LIST_DELETE";
+			}
+			else 
+			{
+				
+				$blockTime += 604800;				
+				// 남은 시간 뿌려주기
+				echo date("Y-m-d h:i:s", $blockTime);		
+				
+			}
+						
+			return;
+		}
+		echo "BLACK_LIST_NULL";
+	}
+	
+	if($id != "")
+	{
+		//계정 블럭된 애는 로그인 불가 처리
+		$blockCheck = mysqli_query($conn, "select userID from BlackList where userID = '$id'");
+		$count = mysqli_num_rows($blockCheck);
+		if($count > 0)
+		{
+			// 여기서 시작
+			// 블록 걸린 시간 체크
+			$blockTime = mysqli_query($conn, "select timeStamp from BlackList where userID = '$id'");
+			$result = mysqli_fetch_array($blockTime, MYSQLI_ASSOC);
+			$blockTime = $result['timeStamp'];
+			$blockTime = strtotime($blockTime); // 해당 시간 초로 변경
+				
+			// 현재 시간 초로 바꿈
+			$nowTime = mktime();//DATE("Y-m-d H:i:s",time());
+				
+			// 일주일 지남 체크
+			if($nowTime-604800 >= $blockTime)
+			{
+				mysqli_query($conn,"delete from BlackList where userID = '$id'");
+				echo "BLACK_LIST_DELETE";
+			}
+			else
+			{
+				// 남은 시간 뿌려주기
+				echo date("Y-m-d h:i:s", $blockTime);
+				
+			}
+							
+			return;
+		}
+		echo "BLACK_LIST_NULL";
+	}
+	
+
+?>
